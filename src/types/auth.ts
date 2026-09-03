@@ -1,7 +1,11 @@
 // src/types/auth.ts
 export interface User {
+  id?: string;
   displayName: string;
   email: string;
+  avatarUrl?: string | null;
+  role?: string;
+  bioTag?: string | null;
 }
 
 export interface AuthTokens {
@@ -23,3 +27,9 @@ export interface RegisterPayload {
   password: string;
   displayName?: string;
 }
+
+export interface UpdateProfilePayload {
+  displayName?: string;
+  avatarUrl?: string;
+}
+
