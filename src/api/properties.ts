@@ -4,53 +4,50 @@ import { apiClient } from "./apiClient"
 
 export const PropertyAPI = {
 
-  getAllProperties: async (page: number, limit: number,
-    type: PropertyType, range: {
+  getAllProperties: async (
+    page: number,
+    limit: number,
+    type: PropertyType,
+    range: {
       min: number;
       max: number;
     },
     checkedCities: {
       city: string;
       checked: boolean;
-    }[]) => {
+    }[],
+    searchQuery: string = ""
+  ) => {
     const params = new URLSearchParams();
     params.append("page", page + "");
     params.append("limit", limit + "");
-    params.append('type', type.toLocaleLowerCase())
 
-    if (range.min > 0 && range.max > 0) {
-      params.append('minPrice', range.min + "")
-      params.append('maxPrice', range.max + "")
+    // Resolve type: Omit if 'All' or empty
+    if (type && type.toLowerCase() !== "all") {
+      params.append("type", type.toLowerCase());
     }
 
-    // [
-    //   {
-    //     "city": "Colombo",
-    //     checked: true
-    //   },
-    //   {
-    //     "city": "Galle",
-    //     checked: true
-    //   },
-    //   {
-    //     "city": "Kiribathgoda",
-    //     checked: true
-    //   },
-    // ]
-    // [colombo,galle,Kiribathgoda]
-    //     [  colombo,galle,Kiribathgoda]
-    //colombo,galle,Kiribathgoda ]
-    //colombo,galle,Kiribathgoda
-    if ((checkedCities.map(obj => obj.city) + "").length > 1) {
-      console.log("list ", (checkedCities.map(obj => obj.city) + ""))
-      console.log("extracted citied ", (checkedCities.map(obj => obj.city) + ""))
-      if (checkedCities.length > 0) {
-        params.append('city', (checkedCities.map(obj => obj.city) + ""))
-      }
+    // Resolve search parameter
+    if (searchQuery && searchQuery.trim().length > 0) {
+      params.append("search", searchQuery.trim());
     }
-    //properties?page=1&limit=4&abc=xyz
 
-    const d = await apiClient.get<PropertyListResponse>('properties?' + params.toString())
+    // Resolve price range
+    if (range && range.max > 0) {
+      params.append("minPrice", range.min + "");
+      params.append("maxPrice", range.max + "");
+    }
+
+    // Resolve checked cities filter
+    const activeCities = checkedCities
+      .filter((c) => c.checked)
+      .map((c) => c.city);
+
+    if (activeCities.length > 0) {
+      params.append("city", activeCities.join(","));
+    }
+
+    const d = await apiClient.get<PropertyListResponse>("properties?" + params.toString());
     return d.data;
   },
 
