@@ -14,32 +14,37 @@ import FilterPanel from './components/FilterPanel'
 
 
 const Home = () => {
-
   const [currentPType, setCurrentPType] = useState<PropertyType>('All');
-
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [checkedCities, setCheckedCities] = useState<{
-    city: string,
-    checked: boolean
-  }[]>([])
+    city: string;
+    checked: boolean;
+  }[]>([]);
 
   const [range, setRange] = useState({
     min: 0,
-    max: 20000
-  })
+    max: 20000,
+  });
 
-  const [triggerFilter, setTriggerFilter] = useState<number>(0)
+  const [triggerFilter, setTriggerFilter] = useState<number>(0);
 
   const trigger = () => {
-    setTriggerFilter(new Date().getTime())
+    setTriggerFilter(new Date().getTime());
     bottomSheetModalRef.current?.dismiss();
-  }
+  };
 
-  const { properties, fetchNextBatch, fetching } = usePropertyList(currentPType, range, checkedCities, triggerFilter);
+  const {
+    properties,
+    initialLoading,
+    fetchingMore,
+    refreshing,
+    error,
+    fetchNextBatch,
+    refetch,
+    handleRefresh,
+  } = usePropertyList(currentPType, range, checkedCities, triggerFilter, searchQuery);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-
-  console.log("checkedCities", checkedCities)
-  console.log("range", range)
 
   // callbacks
   const openFilterPanel = useCallback(() => {
@@ -49,25 +54,47 @@ const Home = () => {
   return (
     <View style={styles.homeContainer}>
       <LocationContainer />
-      <SearchContainer openFilterPanel={openFilterPanel} />
+      <SearchContainer
+        openFilterPanel={openFilterPanel}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
       <PropertyTypesList currentPType={currentPType} setCurrentPType={setCurrentPType} />
-      <View style={
-        {
+      <View
+        style={{
           flexDirection: 'row',
-          justifyContent: 'space-between'
-        }
-      }>
-        <Text style={{
-          fontSize: 24,
-          fontWeight: '700'
-        }}>Popular</Text>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: Colors.TEXT_GRAY
-        }}>See all</Text>
+          justifyContent: 'space-between',
+          marginVertical: 8,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 24,
+            fontWeight: '700',
+          }}
+        >
+          Popular
+        </Text>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '500',
+            color: Colors.TEXT_GRAY,
+          }}
+        >
+          See all
+        </Text>
       </View>
-      <PropertyList properties={properties} fetchNextBatch={fetchNextBatch} fetching={fetching} />
+      <PropertyList
+        properties={properties}
+        fetchNextBatch={fetchNextBatch}
+        initialLoading={initialLoading}
+        fetchingMore={fetchingMore}
+        refreshing={refreshing}
+        error={error}
+        refetch={refetch}
+        handleRefresh={handleRefresh}
+      />
       <FilterPanel
         ref={bottomSheetModalRef}
         checkedCities={checkedCities}
@@ -77,7 +104,7 @@ const Home = () => {
         trigger={trigger}
       />
     </View>
-  )
-}
+  );
+};
 
 export default Home
