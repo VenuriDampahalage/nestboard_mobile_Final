@@ -1,98 +1,102 @@
-import { View, FlatList, StyleSheet, ActivityIndicator } from 'react-native'
+import { View, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native'
 import React, { useMemo } from 'react'
 import { PropertyItem as PItem } from '../../../../types/properties';
 import PropertyItemSkeleton from './PropertyItemSkeleton';
 import PropertyItem from './PropertyItem';
 import Typography from '../../../../components/ui/Typography';
-import { FileQuestionMark } from 'lucide-react-native';
+import RegularButton from '../../../../components/ui/RegularButton';
+import { FileQuestionMark, AlertCircle } from 'lucide-react-native';
 import { Colors } from '../../../../constant/colors';
 
-// const Properties = [
-//   {
-//     id: "1",
-//     title: "Ocean View Villa",
-//     location: "Mirissa, Sri Lanka",
-//     type: "Villa",
-//     price: "$350",
-//     rating: 4.9,
-//     image: "https://images.pexels.com/photos/28463539/pexels-photo-28463539.jpeg",
-//     lat: 5.9485,
-//     lng: 80.4716,
-//   },
-//   {
-//     id: "2",
-//     title: "Luxury City Apartment",
-//     location: "Colombo, Sri Lanka",
-//     type: "Apartment",
-//     price: "$120",
-//     rating: 4.7,
-//     image: "https://images.pexels.com/photos/28463543/pexels-photo-28463543.jpeg",
-//     lat: 6.9271,
-//     lng: 79.8612,
-//   },
-// ]
-
 type Props = {
-  properties: PItem[],
-  fetchNextBatch: () => void,
-  fetching: boolean
+  properties: PItem[];
+  fetchNextBatch: () => void;
+  initialLoading: boolean;
+  fetchingMore: boolean;
+  refreshing: boolean;
+  error: string | null;
+  refetch: () => void;
+  handleRefresh: () => void;
 }
 
 const PropertyList = ({
-  fetchNextBatch, fetching, properties
+  properties,
+  fetchNextBatch,
+  initialLoading,
+  fetchingMore,
+  refreshing,
+  error,
+  refetch,
+  handleRefresh,
 }: Props) => {
-
   const height = 320;
-
   const styles_ = useMemo(() => styles(height), [height]);
+
+  // 1. Initial Loading Skeletons State
+  if (initialLoading) {
+    return (
+      <View style={styles_.flexContainer}>
+        <PropertyItemSkeleton />
+        <View style={{ height: 16 }} />
+        <PropertyItemSkeleton />
+      </View>
+    );
+  }
+
+  // 2. Error State View with Retry Button
+  if (error) {
+    return (
+      <View style={styles_.centeredContainer}>
+        <AlertCircle color={Colors.PRIMARY_COLOR} size={64} />
+        <Typography variant="h2" style={{ marginTop: 12, textAlign: 'center' }}>
+          {error}
+        </Typography>
+        <RegularButton text="Try Again" Icon={AlertCircle} onPress={refetch} marginTop={16} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles_.flexContainer}>
       <FlatList
         showsVerticalScrollIndicator={false}
         style={styles_.flexContainer}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }}></View>}
+        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
         data={properties}
         keyExtractor={(data) => data.id}
         renderItem={(dt) => <PropertyItem dt={dt} />}
-        ListEmptyComponent={() => {
-          return (
-            (fetching) ?
-              <>
-                <PropertyItemSkeleton />
-                <View style={{ height: 16 }}></View>
-                <PropertyItemSkeleton />
-              </>
-              :
-              <View style={
-                {
-                  width: '100%',
-                  aspectRatio: 1,
-                  justifyContent: 'center',
-                  alignItems: 'center'
-                }
-              }>
-                <FileQuestionMark color={Colors.ICON_GRAY} size={100} />
-                <Typography>No properties found</Typography>
-              </View>
-          )
-        }}
-        // ListFooterComponent={(fetching) ? () => <PropertyItemSkeleton /> : null}
-        ListFooterComponent={(fetching) ? () =>
-          <View style={{ padding: 20, alignItems: 'center', justifyContent: 'center' }}>
-            <ActivityIndicator />
-          </View> : null}
-        contentContainerStyle={
-          {
-            paddingBottom: 140
-          }
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[Colors.PRIMARY_COLOR]}
+          />
         }
+        ListEmptyComponent={() => (
+          <View style={styles_.centeredContainer}>
+            <FileQuestionMark color={Colors.ICON_GRAY} size={80} />
+            <Typography variant="h2" style={{ marginTop: 12 }}>
+              No properties found
+            </Typography>
+            <Typography variant="body" style={{ color: Colors.TEXT_GRAY, marginTop: 4 }}>
+              Try adjusting your search or filters.
+            </Typography>
+          </View>
+        )}
+        ListFooterComponent={
+          fetchingMore ? (
+            <View style={{ paddingVertical: 20, alignItems: 'center', justifyContent: 'center' }}>
+              <ActivityIndicator color={Colors.PRIMARY_COLOR} />
+            </View>
+          ) : null
+        }
+        contentContainerStyle={{ paddingBottom: 140 }}
         onEndReached={fetchNextBatch}
-        onEndReachedThreshold={0.5}//0 - 0.5
+        onEndReachedThreshold={0.3}
       />
     </View>
-  )
-}
+  );
+};
 
 export default PropertyList
 
@@ -133,5 +137,12 @@ export const styles = (height: number) => StyleSheet.create({
   },
   flexContainer: {
     flex: 1
+  },
+  centeredContainer: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40
   }
 })
