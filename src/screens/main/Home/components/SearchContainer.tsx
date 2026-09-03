@@ -7,9 +7,11 @@ import { Colors } from '../../../../constant/colors'
 
 type Props = {
   openFilterPanel: () => void;
+  searchQuery: string;
+  setSearchQuery: (text: string) => void;
 }
 
-const SearchContainer = ({ openFilterPanel }: Props) => {
+const SearchContainer = ({ openFilterPanel, searchQuery, setSearchQuery }: Props) => {
   return (
     <View style={
       {
@@ -18,7 +20,7 @@ const SearchContainer = ({ openFilterPanel }: Props) => {
       }
     }>
       <View style={{ flex: 1 }}>
-        <SearchInput />
+        <SearchInput value={searchQuery} onChangeText={setSearchQuery} />
       </View>
       <RoundButton
         onPress={openFilterPanel}
