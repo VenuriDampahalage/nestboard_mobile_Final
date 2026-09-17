@@ -96,23 +96,21 @@ const FilterPanel = forwardRef<BottomSheetModal, Props>(
             <Slider
               style={{ width: '100%', height: 40 }}
               minimumValue={0}
-              maximumValue={10000}
+              maximumValue={100000}
               minimumTrackTintColor={Colors.PRIMARY_COLOR}
               thumbTintColor={Colors.PRIMARY_COLOR}
               maximumTrackTintColor="#000000"
               value={range.min}
               onValueChange={(value) => {
-                setRange({
-                  ...range, ...{
-                    min: value
-                  }
-                })
+                // Clamp: min must always stay at least 1000 below max
+                const clamped = Math.min(value, range.max - 1000);
+                setRange({ ...range, min: Math.max(0, clamped) });
               }}
               thumbSize={32}
             />
             <Slider
               style={{ width: '100%', height: 40 }}
-              minimumValue={10000}
+              minimumValue={1000}
               maximumValue={100000}
               minimumTrackTintColor={Colors.PRIMARY_COLOR}
               thumbTintColor={Colors.PRIMARY_COLOR}
@@ -120,11 +118,9 @@ const FilterPanel = forwardRef<BottomSheetModal, Props>(
               value={range.max}
               thumbSize={32}
               onValueChange={(value) => {
-                setRange({
-                  ...range, ...{
-                    max: value
-                  }
-                })
+                // Clamp: max must always stay at least 1000 above min
+                const clamped = Math.max(value, range.min + 1000);
+                setRange({ ...range, max: clamped });
               }}
             />
           </View>

@@ -1,1 +1,1 @@
-export type PropertyType = "All" | "House" | "Villa" | "Apartment";
+export type PropertyType = "All" | "House" | "Villa" | "Apartment" | "Hotel";

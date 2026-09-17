@@ -16,6 +16,7 @@ import FilterPanel from './components/FilterPanel'
 const Home = () => {
   const [currentPType, setCurrentPType] = useState<PropertyType>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [checkedCities, setCheckedCities] = useState<{
     city: string;
     checked: boolean;
@@ -28,6 +29,14 @@ const Home = () => {
 
   const [triggerFilter, setTriggerFilter] = useState<number>(0);
 
+  // Debounce search query — only fires API call 500ms after the user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const trigger = () => {
     setTriggerFilter(new Date().getTime());
     bottomSheetModalRef.current?.dismiss();
@@ -35,6 +44,7 @@ const Home = () => {
 
   const {
     properties,
+    totalCount,
     initialLoading,
     fetchingMore,
     refreshing,
@@ -42,7 +52,7 @@ const Home = () => {
     fetchNextBatch,
     refetch,
     handleRefresh,
-  } = usePropertyList(currentPType, range, checkedCities, triggerFilter, searchQuery);
+  } = usePropertyList(currentPType, range, checkedCities, triggerFilter, debouncedSearchQuery);
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
@@ -65,6 +75,7 @@ const Home = () => {
           flexDirection: 'row',
           justifyContent: 'space-between',
           marginVertical: 8,
+          alignItems: 'center',
         }}
       >
         <Text
@@ -75,15 +86,17 @@ const Home = () => {
         >
           Popular
         </Text>
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: '500',
-            color: Colors.TEXT_GRAY,
-          }}
-        >
-          See all
-        </Text>
+        {!initialLoading && (
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: '500',
+              color: Colors.TEXT_GRAY,
+            }}
+          >
+            {totalCount} {totalCount === 1 ? 'property' : 'properties'}
+          </Text>
+        )}
       </View>
       <PropertyList
         properties={properties}
@@ -107,4 +120,4 @@ const Home = () => {
   );
 };
 
-export default Home
+export default Home

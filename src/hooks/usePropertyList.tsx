@@ -23,6 +23,7 @@ export const usePropertyList = (
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [properties, setProperties] = useState<PropertyItem[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const limit = 4; // Fetch 4 items per batch
 
@@ -41,6 +42,7 @@ export const usePropertyList = (
         searchQuery
       );
       setProperties(d.data || []);
+      setTotalCount(d.meta.total);
       setHasNext(d.meta.hasNextPage);
       if (d.meta.hasNextPage) {
         setPage(2);
@@ -72,6 +74,7 @@ export const usePropertyList = (
         searchQuery
       );
       setProperties((oldlist) => [...oldlist, ...d.data]);
+      setTotalCount(d.meta.total);
       setHasNext(d.meta.hasNextPage);
       if (d.meta.hasNextPage) {
         setPage((p) => p + 1);
@@ -90,6 +93,7 @@ export const usePropertyList = (
 
   return {
     properties,
+    totalCount,
     initialLoading,
     fetchingMore,
     refreshing,
@@ -98,4 +102,4 @@ export const usePropertyList = (
     refetch: fetchFirstBatch,
     handleRefresh,
   };
-};
+};
