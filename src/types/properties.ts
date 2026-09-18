@@ -20,8 +20,10 @@ export type PropertyItem = {
   price: string;
   rating: number;
   image: string;
+  imageUrl?: string;
   lat: number;
   lng: number;
+  isFavorite?: boolean;
 }
 
 export interface Room {
@@ -47,9 +49,11 @@ export interface Property {
   latitude: number;
   longitude: number;
   imageUrl: string;
+  image?: string;
   minStay: string;
   isActive: boolean;
   createdAt: string;
+  isFavorite?: boolean;
 }
 
 // export type PropertyTypes = Property["type"];

@@ -76,4 +76,19 @@ export const PropertyAPI = {
     return d.data;
   },
 
+  getMyFavourites: async (): Promise<PropertyItem[]> => {
+    const d = await apiClient.get<PropertyItem[] | { data: PropertyItem[] }>('properties/my-favourites');
+    const list = Array.isArray(d.data) ? d.data : (d.data?.data || []);
+    return list.map((item: any) => ({
+      ...item,
+      image: item.image || item.imageUrl || '',
+      isFavorite: true,
+    }));
+  },
+
+  toggleFavorite: async (id: string): Promise<{ propertyId: string; isFavorite: boolean }> => {
+    const d = await apiClient.patch<{ propertyId: string; isFavorite: boolean }>(`properties/${id}/toggle-favorite`);
+    return d.data;
+  },
+
 }

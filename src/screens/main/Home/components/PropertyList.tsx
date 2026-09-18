@@ -120,6 +120,22 @@ export const styles = (height: number) => StyleSheet.create({
     top: 16,
     gap: 6
   },
+  favoriteContainer: {
+    backgroundColor: 'white',
+    width: 36,
+    height: 36,
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 100,
+    left: 16,
+    top: 16,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
   ratingText: {
     fontSize: 16,
     fontWeight: '600'

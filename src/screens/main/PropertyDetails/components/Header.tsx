@@ -1,20 +1,31 @@
-import { View, Text, TouchableOpacity, StyleSheet, Button } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import React from 'react'
-import { ArrowLeft, Bell, Heart } from 'lucide-react-native'
+import { ArrowLeft, Heart } from 'lucide-react-native'
 import { Colors } from '../../../../constant/colors'
 import RoundButton from '../../../../components/ui/RoundButton'
 import { useNavigation } from '@react-navigation/native'
-import { useDispatch } from 'react-redux'
-import { logout } from '../../../../store/authSlice'
-import { removeRefreshToken } from '../../../../util/localStorage'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '../../../../store/store'
+import { togglePropertyFavorite } from '../../../../store/favouriteSlice'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const PropertyHeader = () => {
-
   const nav: any = useNavigation();
   const dispatch = useDispatch();
   const gap = useSafeAreaInsets();
 
+  const currentProperty = useSelector((state: RootState) => state.property.currentProperty);
+  const isFavorite = useSelector((state: RootState) =>
+    currentProperty?.id
+      ? (state.favourite.favouriteIds[currentProperty.id] ?? currentProperty.isFavorite ?? false)
+      : false
+  );
+
+  const handleToggleFavorite = () => {
+    if (currentProperty) {
+      dispatch(togglePropertyFavorite(currentProperty) as any);
+    }
+  };
 
   return (
     <View style={[styles.container, {
@@ -28,11 +39,14 @@ const PropertyHeader = () => {
       />
       <View style={{ flex: 1 }}></View>
       <RoundButton
-        Icon={<Heart color={Colors.SECONDARY_COLOR} size={20} />}
-        onPress={() => {
-          dispatch(logout())
-          removeRefreshToken();
-        }}
+        Icon={
+          <Heart
+            color={isFavorite ? Colors.PRIMARY_COLOR : Colors.SECONDARY_COLOR}
+            fill={isFavorite ? Colors.PRIMARY_COLOR : 'none'}
+            size={20}
+          />
+        }
+        onPress={handleToggleFavorite}
       />
     </View>
   )

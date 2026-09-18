@@ -18,11 +18,18 @@ import { setUser, updateUser, logout } from "../../../store/authSlice";
 import { AuthAPI } from "../../../api/auth";
 import { getFullAvatarUrl } from "../../../util/avatar";
 
+import { useNavigation } from "@react-navigation/native";
+import { Calendar, ChevronRight } from "lucide-react-native";
+import { Colors } from "../../../constant/colors";
+import { fetchMyBookings } from "../../../store/bookingSlice";
+
 const Profile = () => {
+  const nav: any = useNavigation();
   const dispatch = useDispatch();
   const { user, isAuthenticated } = useSelector(
     (state: RootState) => state.auth,
   );
+  const myBookings = useSelector((state: RootState) => state.booking.myBookings);
 
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [localImageUri, setLocalImageUri] = useState<string | null>(null);
@@ -48,6 +55,12 @@ const Profile = () => {
       setDisplayName(user.displayName || "");
     }
   }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchMyBookings() as any);
+    }
+  }, [isAuthenticated, dispatch]);
 
   // Pick Image from Gallery
   const handlePickImage = async () => {
@@ -194,6 +207,35 @@ const Profile = () => {
           </TouchableOpacity>
         </View>
 
+        {/* My Bookings Action Card */}
+        <TouchableOpacity
+          style={styles.bookingsCard}
+          activeOpacity={0.8}
+          onPress={() => nav.navigate('MyBookings')}
+        >
+          <View style={styles.bookingsCardLeft}>
+            <View style={styles.bookingsIconWrapper}>
+              <Calendar size={22} color={Colors.PRIMARY_COLOR} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bookingsTitle}>My Bookings</Text>
+              <Text style={styles.bookingsSubtitle} numberOfLines={1}>
+                {myBookings.length === 0
+                  ? 'View your reservations'
+                  : `${myBookings.length} ${myBookings.length === 1 ? 'reservation' : 'reservations'}`}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.bookingsCardRight}>
+            {myBookings.length > 0 && (
+              <View style={styles.bookingCountBadge}>
+                <Text style={styles.bookingCountText}>{myBookings.length}</Text>
+              </View>
+            )}
+            <ChevronRight size={20} color="#9CA3AF" />
+          </View>
+        </TouchableOpacity>
+
         {/* Logout Button */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutText}>Sign Out</Text>
@@ -205,7 +247,7 @@ const Profile = () => {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f9fafb" },
-  container: { padding: 20, flexGrow: 1 },
+  container: { padding: 20, flexGrow: 1, paddingBottom: 110 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   loadingText: { marginTop: 10, color: "#6b7280" },
   headerTitle: {
@@ -234,14 +276,14 @@ const styles = StyleSheet.create({
   avatarHint: { marginTop: 8, fontSize: 12, color: "#6b7280" },
   card: {
     backgroundColor: "#ffffff",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   label: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 6 },
   input: {
@@ -263,6 +305,64 @@ const styles = StyleSheet.create({
   },
   saveButton: { backgroundColor: "#2563eb" },
   saveButtonText: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  bookingsCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#F0F0F5",
+  },
+  bookingsCardLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+  },
+  bookingsIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: "#FFF1EB",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  bookingsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: Colors.TEXT_PRIMARY,
+  },
+  bookingsSubtitle: {
+    fontSize: 13,
+    color: Colors.TEXT_GRAY,
+    marginTop: 2,
+  },
+  bookingsCardRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  bookingCountBadge: {
+    backgroundColor: "#FFF1EB",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFE0D1",
+  },
+  bookingCountText: {
+    color: Colors.PRIMARY_COLOR,
+    fontWeight: "700",
+    fontSize: 12,
+  },
   logoutButton: {
     paddingVertical: 14,
     borderRadius: 8,

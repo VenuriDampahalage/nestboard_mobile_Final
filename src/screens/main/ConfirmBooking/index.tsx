@@ -2,8 +2,9 @@ import { View, Text, Alert, ScrollView } from 'react-native'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import ConfirmScreenHeader from './components/Header'
 import Typography from '../../../components/ui/Typography'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../../../store/store'
+import { fetchMyBookings } from '../../../store/bookingSlice'
 import RegularButton from '../../../components/ui/RegularButton'
 import { CheckCircle, Clock, Lock, AlertCircle } from 'lucide-react-native'
 import { BookingAPI, BookingResult } from '../../../api/bookings'
@@ -27,6 +28,7 @@ type Step = 'form' | 'pending' | 'confirmed' | 'expired';
 
 const ConfirmBooking = () => {
   const nav: any = useNavigation();
+  const dispatch = useDispatch();
 
   const currentProperty = useSelector((state: RootState) => state.property.currentProperty);
   const roomId = useSelector((state: RootState) => state.booking.data?.roomId);
@@ -165,8 +167,11 @@ const ConfirmBooking = () => {
     setConfirmLoading(true);
     setError(null);
     try {
-      await BookingAPI.confirmBooking(booking.id);
+      const confirmedResult = await BookingAPI.confirmBooking(booking.id);
       if (timerRef.current) clearInterval(timerRef.current);
+      setBooking(confirmedResult);
+      // Immediately refresh bookings in Redux so newly confirmed booking appears in My Bookings without restart
+      dispatch(fetchMyBookings() as any);
       setStep('confirmed');
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? '';
@@ -189,12 +194,19 @@ const ConfirmBooking = () => {
         <Typography variant='body' style={{ textAlign: 'center', color: Colors.TEXT_GRAY }}>
           Your seat in {roomName} at {currentProperty?.title} is confirmed.
         </Typography>
-        <RegularButton
-          text='Done'
-          Icon={null}
-          marginTop={16}
-          onPress={() => nav.navigate('Tab')}
-        />
+        <View style={{ width: '100%', gap: 12, marginTop: 16 }}>
+          <RegularButton
+            text='View My Bookings'
+            Icon={null}
+            onPress={() => nav.navigate('MyBookings')}
+          />
+          <RegularButton
+            text='Back to Home'
+            variant='outline'
+            Icon={null}
+            onPress={() => nav.navigate('Tab')}
+          />
+        </View>
       </View>
     );
   }

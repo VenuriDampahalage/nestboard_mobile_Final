@@ -2,12 +2,14 @@ import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './authSlice'
 import PropertySlice from './propertySlice'
 import bookingSlice from './bookingSlice'
+import favouriteReducer from './favouriteSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     property: PropertySlice,
     booking: bookingSlice,
+    favourite: favouriteReducer,
   },
 })
 
