@@ -71,4 +71,9 @@ export const PropertyAPI = {
     return d.data;
   },
 
+  getCities: async (): Promise<string[]> => {
+    const d = await apiClient.get<string[]>('properties/cities');
+    return d.data;
+  },
+
 }

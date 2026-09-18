@@ -1,14 +1,14 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native'
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
 import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import Typography from '../../../../components/ui/Typography';
-import useCheckBox from '../../../../components/ui/CheckboxComp';
-import { CITIES } from '../../../../constant/common';
 import CheckBoxComp from '../../../../components/ui/CheckboxComp';
 import Slider from '@react-native-community/slider';
 import { Colors } from '../../../../constant/colors';
 import { formatNumberIntoCurrency } from '../../../../util/common';
 import RegularButton from '../../../../components/ui/RegularButton';
+import { PropertyAPI } from '../../../../api/properties';
+import { AlertCircle } from 'lucide-react-native';
 
 interface Props {
   checkedCities: {
@@ -33,6 +33,28 @@ interface Props {
 const FilterPanel = forwardRef<BottomSheetModal, Props>(
   ({ checkedCities, range, setCheckedCities, setRange, trigger }, ref) => {
 
+    const [cities, setCities] = useState<string[]>([]);
+    const [citiesLoading, setCitiesLoading] = useState(true);
+    const [citiesError, setCitiesError] = useState(false);
+
+    const fetchCities = async () => {
+      setCitiesLoading(true);
+      setCitiesError(false);
+      try {
+        const data = await PropertyAPI.getCities();
+        setCities(data);
+      } catch (err) {
+        console.error('Failed to fetch cities', err);
+        setCitiesError(true);
+      } finally {
+        setCitiesLoading(false);
+      }
+    };
+
+    useEffect(() => {
+      fetchCities();
+    }, []);
+
     const renderBackdrop = useCallback(
       (backdropProps: BottomSheetBackdropProps) => (
         <BottomSheetBackdrop
@@ -49,26 +71,6 @@ const FilterPanel = forwardRef<BottomSheetModal, Props>(
       console.log('handleSheetChanges', index);
     }, []);
 
-    // [
-    //   {
-    //   city:"colombo",
-    //   checked:true
-    // },
-    // {
-    //   city:"Galle",
-    //   checked:false
-    // }
-    // ]
-
-    //     [
-    //   "Colombo",
-    //   "Ethul Kotte",
-    //   "Gampaha",
-    //   "Kadawatha",
-    //   "Kiribathgoda",
-    //   "Galle"
-    // ]
-
     return (
       <BottomSheetModal
         ref={ref}
@@ -81,12 +83,28 @@ const FilterPanel = forwardRef<BottomSheetModal, Props>(
 
           <View style={{ marginTop: 24, gap: 10 }}>
             <Typography variant='h2'>Cities</Typography>
-            {
-              CITIES.map(city =>
-                <CheckBoxComp key={city} isSelected={checkedCities.find(obj => obj.city == city)?.checked} title={city} checkedCities={checkedCities} setCheckedCities={setCheckedCities} />
+            {citiesLoading ? (
+              <ActivityIndicator color={Colors.PRIMARY_COLOR} style={{ marginVertical: 12 }} />
+            ) : citiesError ? (
+              <TouchableOpacity onPress={fetchCities} style={styles.errorRow}>
+                <AlertCircle color={Colors.PRIMARY_COLOR} size={18} />
+                <Typography variant='body' style={{ color: Colors.PRIMARY_COLOR, marginLeft: 6 }}>
+                  Failed to load cities. Tap to retry.
+                </Typography>
+              </TouchableOpacity>
+            ) : (
+              cities.map(city =>
+                <CheckBoxComp
+                  key={city}
+                  isSelected={checkedCities.find(obj => obj.city === city)?.checked}
+                  title={city}
+                  checkedCities={checkedCities}
+                  setCheckedCities={setCheckedCities}
+                />
               )
-            }
+            )}
           </View>
+
           <View style={{ marginTop: 24, gap: 10 }}>
             <Typography variant='h2'>Price</Typography>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -139,4 +157,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     padding: 24
   },
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+  }
 });
+
